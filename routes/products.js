@@ -17,6 +17,8 @@ router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { stock, price, category_id } = req.body;
 
+  console.log('🛠 Incoming update:', req.body)
+
   if (stock == null || price == null || category_id == null) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
