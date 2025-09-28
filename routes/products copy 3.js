@@ -13,7 +13,7 @@ const storage = multer.diskStorage({
 })
 const upload = multer({ storage })
 
-// ✅ GET all products with pagination
+// GET all products with pagination
 router.get('/', async (req, res) => {
   const limit = parseInt(req.query.limit) || 10
   const offset = parseInt(req.query.offset) || 0
@@ -24,51 +24,12 @@ router.get('/', async (req, res) => {
       [limit, offset]
     )
     const countRes = await db.query('SELECT COUNT(*) FROM products')
-    res.setHeader('Content-Type', 'application/json')
-    res.status(200).json({
-      products: result.rows,
-      total: parseInt(countRes.rows[0].count)
-    })
+    res.json({ products: result.rows, total: parseInt(countRes.rows[0].count) })
   } catch (err) {
     console.error('❌ Fetch all error:', err)
     res.status(500).json({ error: 'Failed to fetch products' })
   }
 })
-
-router.get('/category-stock', async (req, res) => {
-  try {
-    const result = await db.query(`
-      SELECT c.name AS category, SUM(p.stock)::int AS total_stock
-      FROM products p
-      JOIN categories c ON p.category_id = c.id
-      GROUP BY c.name
-    `)
-    res.json(result.rows)
-  } catch (err) {
-    console.error('❌ Failed to fetch category stock:', err)
-    res.status(500).json({ error: 'Stock fetch failed' })
-  }
-})
-
-
-router.get('/low-stock', async (req, res) => {
-  console.log('🔍 /products/low-stock hit')
-  try {
-    const result = await db.query(`
-      SELECT p.id, p.name, p.stock, c.name AS category
-      FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
-      WHERE p.stock < 5
-      ORDER BY p.stock ASC
-    `)
-    console.log('✅ Low-stock result:', result)
-    res.json(result.rows)
-  } catch (err) {
-    console.error('❌ Failed to fetch low-stock products:', err)
-    res.status(500).json({ error: 'Failed to fetch restock list' })
-  }
-})
-
 
 // GET single product by ID
 router.get('/:id', async (req, res) => {
@@ -148,6 +109,5 @@ router.post('/upload', upload.single('image'), (req, res) => {
   }
   res.json({ success: true, filename: req.file.filename })
 })
-
 
 module.exports = router
